@@ -1,0 +1,30 @@
+import { IExecuteFunctions } from 'n8n-workflow';
+export declare function paramsDefault(parametersToRequest: any): {
+    pageNumber: any;
+    pageSize: any;
+    orderBy: any;
+    orderDirection: any;
+    'CreatedAt.After': any;
+    'CreatedAt.Before': any;
+    'UpdatedAt.After': any;
+    'UpdatedAt.Before': any;
+    "ActiveAt.After": any;
+    "ActiveAt.Before": any;
+    "EndAt.After": any;
+    "EndAt.Before": any;
+    "LastInteractionAt.After": any;
+    "LastInteractionAt.Before": any;
+};
+export declare function sendRequestOrAutoPagination(params: any, url: string, token: string): Promise<any>;
+export declare function getParamsGenerics(node: IExecuteFunctions): {
+    orderDirection?: string | undefined;
+    orderBy?: string | undefined;
+    updatedAtBefore?: string | undefined;
+    updatedAtAfter?: string | undefined;
+    createdAtBefore?: string | undefined;
+    createdAtAfter?: string | undefined;
+    pageSize?: number | undefined;
+    pageNumber?: number | undefined;
+    maxPage?: number | undefined;
+    autoPagination: boolean;
+};
