@@ -166,11 +166,13 @@ exports.messageFields = [
         },
     },
     {
-        displayName: 'File',
+        displayName: 'Filerererere',
         name: 'fileToSend',
-        type: 'json',
-        default: {},
+        type: 'string',
+        default: '',
+        requiresDataPath: 'single',
         placeholder: 'Place the file',
+        description: "The name of the input field that contains the base64 string to convert to a file. Use dot-notation for deep fields (e.g. 'level1.level2.currentKey').",
         displayOptions: {
             show: {
                 resource: ['message', 'session'],

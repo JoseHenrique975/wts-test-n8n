@@ -8,7 +8,7 @@ import { messageOperations, messageFields } from './descriptions/MessageDescript
 import { panelOperations, panelFields, updateCardFields } from './descriptions/PanelDescription';
 import { sessionOperations, sessionFields, updateSessionFields } from './descriptions/SessionDescription';
 import { sequenceOperations, sequenceFields } from './descriptions/SequenceDescription';
-import { Constants } from './constants.types';
+import { Constants, notSend } from './constants.types';
 import { chatbotFields, chatbotOperations } from './descriptions';
 import { getParamsGenerics } from '../utils';
 
@@ -158,8 +158,6 @@ export class WtsChat implements INodeType {
 			async getTemplates(this: ILoadOptionsFunctions): Promise<Array<{ name: string; value: string }>> {
 				const channelId = this.getCurrentNodeParameter('channelId') as string;
 				const result = await WtsChatService.getTemplates(channelId, this);
-				console.log("Get Templates");
-				console.log(result);
 				return result;
 			},
 
@@ -311,21 +309,15 @@ export class WtsChat implements INodeType {
 					}
 				}
 
-				console.log("Custom Fields");
-				console.log(customFields);
-
 				const customFieldsObject = customFields?.customFields?.reduce(
 					(acc: { [key: string]: string }, field) => {
-						if (field.key != 'null' && field.key != null) {
+						if (field.key != notSend && field.key != null) {
 							acc[field.key] = field.value;
 						}
 						return acc;
 					},
 					{},
 				);
-
-				console.log("CustomFieldsObject");
-				console.log(customFieldsObject);
 
 				const metadataObject = metadata?.metadata?.reduce(
 					(acc: { [key: string]: string }, metadata) => {
@@ -350,9 +342,6 @@ export class WtsChat implements INodeType {
 						...(getIfExists && { getIfExists: getIfExists }),
 					}
 				}
-
-				console.log("Body antes da requisição");
-				console.log(body);
 
 				try {
 					const data = await WtsCoreService.createContact(body, token);
@@ -432,19 +421,13 @@ export class WtsChat implements INodeType {
 				const botId = this.getNodeParameter('botId', 0) as string;
 
 				const departmentId = this.getNodeParameter('departmentId', 0) as string;
-				const userId = this.getNodeParameter('userIdByDepartment', 0) as string;
+				const userId = departmentId != notSend ? this.getNodeParameter('userIdByDepartment', 0) as string : null;
 
 				const enableBot = this.getNodeParameter('enableBot', 0) as boolean;
 				const hiddenSession = this.getNodeParameter('hiddenSession', 0) as boolean;
 				const forceStartSession = this.getNodeParameter('forceStartSession', 0) as boolean;
 
-				console.log("Department");
-				console.log(departmentId);
-
-				console.log("Bots");
-				console.log(botId);
-
-				if (!from || from == 'null') {
+				if (!from || from == notSend) {
 					throw new NodeApiError(this.getNode(), {
 						message: 'Choose channel',
 						description: 'Fill in the From field',
@@ -478,12 +461,11 @@ export class WtsChat implements INodeType {
 						forceStartSession: forceStartSession
 					},
 
-					...(departmentId != 'null' && { department: { id: departmentId } }),
-					...(botId != 'null' && { botId: botId }),
-					...(userId != 'null' && { user: { id: userId } }),
+					...(departmentId != notSend && { department: { id: departmentId } }),
+					...(botId != notSend && { botId: botId }),
+					...(userId != notSend && { user: { id: userId } }),
 				}
 
-				console.log(body);
 
 				try {
 					const data = await WtsChatService.sendMessageText(body, token, synchronous);
@@ -499,7 +481,8 @@ export class WtsChat implements INodeType {
 			}
 
 			else if (operation === 'sendFile') {
-				const file = this.getNodeParameter('fileToSend', 0) as File;
+				const file = this.getNodeParameter('fileToSend', 0) as string;
+				const inputData = this.getInputData(0) as any;
 				const fileUrl = this.getNodeParameter('urlFile', 0) as string ?? null;
 
 				const synchronous = this.getNodeParameter('synchronousMessage', 0) as boolean;
@@ -509,7 +492,7 @@ export class WtsChat implements INodeType {
 				const botId = this.getNodeParameter('botId', 0) as string;
 
 				const departmentId = this.getNodeParameter('departmentId', 0) as string;
-				const userId = this.getNodeParameter('userIdByDepartment', 0) as string;
+				const userId = departmentId != notSend ? this.getNodeParameter('userIdByDepartment', 0) as string : null;
 
 				const enableBot = this.getNodeParameter('enableBot', 0) as boolean;
 				const hiddenSession = this.getNodeParameter('hiddenSession', 0) as boolean;
@@ -535,7 +518,7 @@ export class WtsChat implements INodeType {
 					});
 				}
 
-				if (!from || from == 'null') {
+				if (!from || from == notSend) {
 					throw new NodeApiError(this.getNode(), {
 						message: 'Choose channel',
 						description: 'Fill in the From field',
@@ -555,16 +538,28 @@ export class WtsChat implements INodeType {
 						hiddenSession: hiddenSession,
 						forceStartSession: forceStartSession
 					},
-					...(departmentId != 'null' && { department: { id: departmentId } }),
-					...(botId != 'null' && { botId: botId }),
-					...(userId != 'null' && { user: { id: userId } }),
+					...(departmentId != notSend && { department: { id: departmentId } }),
+					...(botId != notSend && { botId: botId }),
+					...(userId != notSend && { user: { id: userId } }),
 				}
-
-				console.log("Body antes da requisição");
-				console.log(body);
-
+			
+            
 				if (file) {
-					const responseSaveFile = await WtsChatService.saveFile(file, token);
+					if (!inputData[0].binary || !inputData) {
+						throw new NodeApiError(this.getNode(), {
+							message: 'There is no data in the input',
+							description: 'There is no data in the input',
+						});
+					}
+					if(!inputData[0].binary[file]){
+						throw new NodeApiError(this.getNode(), {
+							message: 'There is no file with that name that comes from input',
+							description: 'There is no file with that name that comes from input',
+						});
+					}
+					const newFile: File = inputData[0].binary[file];
+					
+					const responseSaveFile = await WtsChatService.saveFile(newFile, token);
 					body.body.fileId = responseSaveFile.data.id;
 					body.body.fileUrl = null;
 				}
@@ -588,7 +583,7 @@ export class WtsChat implements INodeType {
 				const from = this.getNodeParameter('channelId', 0) as string;
 				const template = this.getNodeParameter('templates', 0) as string;
 
-				if (template == null || template == 'null') {
+				if (template == null || template == notSend) {
 					throw new NodeApiError(this.getNode(), {
 						message: 'Choose template',
 						description: 'Fill in the Template field',
@@ -598,7 +593,8 @@ export class WtsChat implements INodeType {
 				const templateObj: any = jsonParse(template);
 
 				let fileUrl = templateObj.fileType != "UNDEFINED" ? this.getNodeParameter('urlFile', 0) as string : null;
-				const file = templateObj.fileType != "UNDEFINED" ? this.getNodeParameter('fileToSend', 0) as File : null;
+				const file = templateObj.fileType != "UNDEFINED" ? this.getNodeParameter('fileToSend', 0) as string : null;
+				const inputData = file ? this.getInputData(0) as any : null;
 
 				const templateId = templateObj.id;
 
@@ -607,7 +603,7 @@ export class WtsChat implements INodeType {
 				const to = this.getNodeParameter('numberToSend', 0) as string;
 
 				const departmentId = this.getNodeParameter('departmentId', 0) as string;
-				const userId = this.getNodeParameter('userIdByDepartment', 0) as string;
+				const userId = departmentId != notSend ? this.getNodeParameter('userIdByDepartment', 0) as string : null;
 				const botId = this.getNodeParameter('botId', 0) as string;
 
 				const enableBot = this.getNodeParameter('enableBot', 0) as boolean;
@@ -633,7 +629,7 @@ export class WtsChat implements INodeType {
 					return result;
 				};
 
-				if (!from || from == 'null') {
+				if (!from || from == notSend) {
 					throw new NodeApiError(this.getNode(), {
 						message: 'Choose channel',
 						description: 'Fill in the From field',
@@ -642,7 +638,21 @@ export class WtsChat implements INodeType {
 
 				let fileId;
 				if (file) {
-					const responseSaveFile = await WtsChatService.saveFile(file, token);
+					if (!inputData[0].binary || !inputData) {
+						throw new NodeApiError(this.getNode(), {
+							message: 'There is no data in the input',
+							description: 'There is no data in the input',
+						});
+					}
+					if(!inputData[0].binary[file]){
+						throw new NodeApiError(this.getNode(), {
+							message: 'There is no file with that name that comes from input',
+							description: 'There is no file with that name that comes from input',
+						});
+					}
+					const newFile: File = inputData[0].binary[file];
+
+					const responseSaveFile = await WtsChatService.saveFile(newFile, token);
 					fileId = responseSaveFile.data.id;
 					fileUrl = null;
 				}
@@ -663,9 +673,9 @@ export class WtsChat implements INodeType {
 						forceStartSession: forceStartSession
 					},
 
-					...(botId != 'null' && { botId: botId }),
-					...(userId != 'null' && { user: { id: userId } }),
-					...(departmentId != 'null' && { department: { id: departmentId } })
+					...(botId != notSend && { botId: botId }),
+					...(userId != notSend && { user: { id: userId } }),
+					...(departmentId != notSend && { department: { id: departmentId } })
 				}
 
 				/*Request*/
@@ -724,9 +734,8 @@ export class WtsChat implements INodeType {
 
 				const paramsRequest = {
 					status: statusSession,
-					departmentId: departmentId,
-					...(userId != 'null' && { userId: userId }),
-					...(departmentId != 'null' && { departmentId: departmentId }),
+					...(userId != notSend && { userId: userId }),
+					...(departmentId != notSend && { departmentId: departmentId }),
 					contactId: contactId,
 					includeDetails: includeDetails,
 
@@ -740,9 +749,6 @@ export class WtsChat implements INodeType {
 					lastInteractionAtAfter: lastInteractionAtAfter,
 					lastInteractionAtBefore: lastInteractionAtBefore
 				}
-
-				console.log("ParamsRequest");
-				console.log(paramsRequest)
 
 				try {
 					const data = await WtsChatService.getAllSessions(paramsRequest, token, urlSession);
@@ -759,7 +765,7 @@ export class WtsChat implements INodeType {
 			else if (operation === 'updateTransfer') {
 				const sessionId = this.getNodeParameter('sessionId', 0) as string;
 				const departmentId = this.getNodeParameter('departmentId', 0) as string;
-				const userId = departmentId != 'null' ? this.getNodeParameter('userIdByDepartment', 0) as string : null;
+				const userId = departmentId != notSend ? this.getNodeParameter('userIdByDepartment', 0) as string : null;
 
 				if (!sessionId) {
 					throw new NodeApiError(this.getNode(), {
@@ -768,7 +774,7 @@ export class WtsChat implements INodeType {
 					});
 				}
 
-				if (departmentId == 'null' || userId == 'null') {
+				if (departmentId == notSend || userId == notSend) {
 					throw new NodeApiError(this.getNode(), {
 						message: 'The transfer destination user or department must be defined',
 						description: 'The transfer destination user or department must be defined',
@@ -788,8 +794,8 @@ export class WtsChat implements INodeType {
 
 				const body = {
 					type: type,
-					...(departmentId != 'null' && { newDepartmentId: departmentId }),
-					...(userId != 'null' && { newUserId: userId })
+					...(departmentId != notSend && { newDepartmentId: departmentId }),
+					...(userId != notSend && { newUserId: userId })
 				}
 
 				try {
@@ -876,7 +882,7 @@ export class WtsChat implements INodeType {
 					});
 				}
 
-				if (!userId || userId == 'null') {
+				if (!userId || userId == notSend) {
 					throw new NodeApiError(this.getNode(), {
 						message: 'UserID is empty!',
 						description: 'Choose user'
@@ -886,9 +892,6 @@ export class WtsChat implements INodeType {
 				const body = {
 					userId
 				}
-
-				console.log("Body");
-				console.log(body);
 
 				try {
 					const data = await WtsChatService.assignUserToSession(sessionId, body, token);
@@ -955,17 +958,11 @@ export class WtsChat implements INodeType {
 					});
 				}
 
-				console.log("DepartmentId");
-				console.log(departmentId);
-
 				const body = {
 					companyId,
 					...(statusSessionUpdate != 'UNDEFINED' && { statusSessionUpdate }), endAt,
-					number, ...(departmentId != 'null' && { departmentId }), userId, metadataObject, fields
+					number, ...(departmentId != notSend && { departmentId }), ...(userId != notSend && { userId }), metadataObject, fields
 				}
-
-				console.log("Body");
-				console.log(body);
 
 				try {
 					const data = await WtsChatService.updateSession(sessionId, body, token);
@@ -998,7 +995,8 @@ export class WtsChat implements INodeType {
 			else if (operation === 'sendMessageFileSession') {
 				const sessionId = this.getNodeParameter('sessionId', 0) as string;
 				const fileUrl = this.getNodeParameter('urlFile', 0) as string ?? null;
-				const file = this.getNodeParameter('fileToSend', 0) as File ?? null;
+				const file = this.getNodeParameter('fileToSend', 0) as string ?? null;
+				const inputData = file ? this.getInputData(0) as any : null;
 
 				if (!sessionId || sessionId.trim() === '') {
 					throw new NodeApiError(this.getNode(), {
@@ -1020,7 +1018,21 @@ export class WtsChat implements INodeType {
 				}
 
 				if (file) {
-					const responseSaveFile = await WtsChatService.saveFile(file, token);
+					if (!inputData[0].binary || !inputData) {
+						throw new NodeApiError(this.getNode(), {
+							message: 'There is no data in the input',
+							description: 'There is no data in the input',
+						});
+					}
+					if(!inputData[0].binary[file]){
+						throw new NodeApiError(this.getNode(), {
+							message: 'There is no file with that name that comes from input',
+							description: 'There is no file with that name that comes from input',
+						});
+					}
+					const newFile: File = inputData[0].binary[file];
+                     
+					const responseSaveFile = await WtsChatService.saveFile(newFile, token);
 					body.fileId = responseSaveFile.data.id;
 					body.fileUrl = null
 				}
@@ -1038,9 +1050,7 @@ export class WtsChat implements INodeType {
 			else if (operation === 'sendMessageTemplateSession') {
 				const sessionId = this.getNodeParameter('sessionId', 0) as string;
 				const template = this.getNodeParameter('templatesBySession', 0) as string;
-				const params = (template && template != 'null') ? this.getNodeParameter('paramsTemplatesSession', 0) as { paramsTemplatesValues: { name: string, value: string }[] } : null;
-
-				console.log("Teste de envio de template");
+				const params = (template && template != notSend) ? this.getNodeParameter('paramsTemplatesSession', 0) as { paramsTemplatesValues: { name: string, value: string }[] } : null;
 
 				if (!sessionId || sessionId.trim() == '') {
 					throw new NodeApiError(this.getNode(), {
@@ -1049,7 +1059,7 @@ export class WtsChat implements INodeType {
 					});
 				}
 
-				if (template == 'null' || !template) {
+				if (template == notSend || !template) {
 					throw new NodeApiError(this.getNode(), {
 						message: 'Choose a valid template',
 						description: 'Choose a valid template'
@@ -1057,10 +1067,9 @@ export class WtsChat implements INodeType {
 				}
 				const obj: any = jsonParse(template);
 
-				console.log(obj.fileType);
-
 				let fileUrl = obj.fileType != "UNDEFINED" ? this.getNodeParameter('urlFile', 0) as string : null;
-				const file = obj.fileType != "UNDEFINED" ? this.getNodeParameter('fileToSend', 0) as File : null;
+				const file = obj.fileType != "UNDEFINED" ? this.getNodeParameter('fileToSend', 0) as string : null;
+				const inputData = file ? this.getInputData(0) as any : null;
 
 				const paramsArray = params?.paramsTemplatesValues;
 				const paramsName = paramsArray?.map(p => p.name);
@@ -1087,11 +1096,22 @@ export class WtsChat implements INodeType {
 					fileUrl: fileUrl
 				}
 
-				console.log("Body");
-				console.log(body);
-
 				if (file) {
-					const responseSaveFile = await WtsChatService.saveFile(file, token);
+					if (!inputData[0].binary || !inputData) {
+						throw new NodeApiError(this.getNode(), {
+							message: 'There is no data in the input',
+							description: 'There is no data in the input',
+						});
+					}
+					if(!inputData[0].binary[file]){
+						throw new NodeApiError(this.getNode(), {
+							message: 'There is no file with that name that comes from input',
+							description: 'There is no file with that name that comes from input',
+						});
+					}
+					
+					const newFile: File = inputData[0].binary[file];
+					const responseSaveFile = await WtsChatService.saveFile(newFile, token);
 					body.fileId = responseSaveFile.data.id;
 					body.fileUrl = null;
 				}
@@ -1176,7 +1196,7 @@ export class WtsChat implements INodeType {
 					{},
 				);
 
-				if (!stepId || stepId == 'null') {
+				if (!stepId || stepId == notSend) {
 					throw new NodeApiError(this.getNode(), {
 						message: 'Choose a panel and its step',
 						description: 'Choose a panel and its step',
@@ -1198,17 +1218,13 @@ export class WtsChat implements INodeType {
 					tagIds: tagsPanelIds,
 
 					...(monetaryAmount && { monetaryAmount: monetaryAmount }),
-					...(userId != 'null' && { responsibleUserId: userId }),
+					...(userId != notSend && { responsibleUserId: userId }),
 					...(contactId && { contactIds: [contactId] }),
 					...(position && { position: position }),
 					...(description && { description: description }),
 					...(metadataObject && { metadata: metadataObject }),
 					...(customFieldsObject && { customFields: customFieldsObject }),
 				}
-
-				console.log("Antes da requisição");
-				console.log(body);
-
 
 				try {
 					const data = await WtsCrmService.createCard(body, token);
@@ -1344,7 +1360,7 @@ export class WtsChat implements INodeType {
 
 				const genericParams = getParamsGenerics(this);
 
-				if (!panelId) {
+				if (!panelId || panelId == notSend) {
 					throw new NodeApiError(this.getNode(), {
 						message: 'Fill in the panel ID field',
 						description: 'Fill in the field with the panel id'
@@ -1352,18 +1368,15 @@ export class WtsChat implements INodeType {
 				}
 				const params = {
 					panelId: panelId,
-					...(stepId != 'null' && { stepId: stepId }),
+					...(stepId != notSend && { stepId: stepId }),
 					...(contactId && { contactId: contactId }),
-					...(responsibleUserId != 'null' && { responsibleUserId: responsibleUserId }),
+					...(responsibleUserId != notSend && { responsibleUserId: responsibleUserId }),
 					...(textFilter && { textFilter: textFilter }),
 					...(includeArchived && { includeArchived: includeArchived }),
 					...(includeDetails && { includeDetails: includeDetails }),
 
 					...genericParams
 				}
-
-				console.log("Params");
-				console.log(params);
 
 				try {
 					const data = await WtsCrmService.getAllCards(params, token);
@@ -1516,14 +1529,11 @@ export class WtsChat implements INodeType {
 					stepId,
 					dueDate,
 					updateCardTagId,
-					...(userId != 'null' && { userId }),
+					...(userId != notSend && { userId }),
 					customFieldsObject,
 					metadataObject,
 					arrayContactIds
 				}
-
-				console.log("Body request");
-				console.log(body);
 
 				try {
 					const data = await WtsCrmService.updateCard(cardId, body, token);
@@ -1555,7 +1565,7 @@ export class WtsChat implements INodeType {
 					contactMetadata: { key: string; value: string }[];
 				};
 
-				if (!botId || botId == 'null') {
+				if (!botId || botId == notSend) {
 					throw new NodeApiError(this.getNode(), {
 						message: 'Choose a bot',
 						description: 'Fill in the Bots ID field'
@@ -1569,7 +1579,7 @@ export class WtsChat implements INodeType {
 					});
 				}
 
-				if (!from || from == 'null') {
+				if (!from || from == notSend) {
 					throw new NodeApiError(this.getNode(), {
 						message: 'Choose channel',
 						description: 'Fill in the From field'
@@ -1603,9 +1613,6 @@ export class WtsChat implements INodeType {
 					sessionMetadata,
 					contactMetadata
 				}
-
-				console.log('Body');
-				console.log(body);
 
 				try {
 					const data = await WtsChatService.sendChatbot(body, token);
@@ -1701,7 +1708,7 @@ export class WtsChat implements INodeType {
 
 				const body = {
 					...(phoneNumber && { phoneNumber: phoneNumber }),
-					...(contactId && { contactId: contactId })
+					...(contactId && { contactId })
 				}
 
 				try {

@@ -1,6 +1,6 @@
 import { ILoadOptionsFunctions } from 'n8n-workflow';
 import axios from 'axios';
-import { Constants } from './constants.types';
+import { Constants, notSend } from './constants.types';
 import { sendRequestOrAutoPagination } from '../utils';
 
 export class WtsCoreService {
@@ -23,7 +23,7 @@ export class WtsCoreService {
 				},
 			});
 			const fields = response.data;
-			fields.push({name: 'Undefined', key: 'null'})
+			fields.push({name: 'Undefined', key: notSend})
 
 			return fields.map((field: { key: string; name: string }) => ({
 				name: field.name,
@@ -80,7 +80,7 @@ export class WtsCoreService {
 				name: user.name,
 				value: user.userId,
 			}));
-			mappedResult.push({name: 'Undefined', value: 'null'});
+			mappedResult.push({name: 'Undefined', value: notSend});
 			return mappedResult;
 		} catch (error) {
 			throw new Error(`Failed to load users: ${error.response.data.text}`);
@@ -102,7 +102,7 @@ export class WtsCoreService {
 			});
 
 			const departments = response.data;
-			departments.push({name: 'Undefined', id: 'null'})
+			departments.push({name: 'Undefined', id: notSend})
 
 			return departments.map((department: { name: string; id: string }) => ({
 				name: department.name,
@@ -134,7 +134,7 @@ export class WtsCoreService {
 
 			const users = response.data;
 			const result: any = [];
-			result.push({name: 'Undefined', id: 'null'});
+			result.push({name: 'Undefined', id: notSend});
 
 			users.map((user: any) => {
 				user.departments.map((element: any) => {

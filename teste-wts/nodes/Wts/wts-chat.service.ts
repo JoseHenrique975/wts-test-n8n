@@ -1,7 +1,7 @@
 import { ILoadOptionsFunctions } from 'n8n-workflow';
 
 import axios from 'axios';
-import { Constants } from './constants.types';
+import { Constants, notSend } from './constants.types';
 import { paramsDefault, sendRequestOrAutoPagination } from '../utils';
 
 export class WtsChatService {
@@ -90,7 +90,6 @@ export class WtsChatService {
         },
       });
 
-      console.log(response);
       const data = response.data;
       return data;
     } catch (error) {
@@ -255,9 +254,6 @@ export class WtsChatService {
       ...(body.fields && { fields: body.fields })
     }
 
-    console.log("Body Request");
-    console.log(bodyRequest);
-
     try {
       const response = await axios.put(url, bodyRequest, {
         headers: {
@@ -266,9 +262,6 @@ export class WtsChatService {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      console.log("Response");
-      console.log(response);
 
       const data = response.data;
       return data;
@@ -438,10 +431,10 @@ export class WtsChatService {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        data:  body
+        data: body
         
       });
-
+   
       const data = response.data;
       return data;
     } catch (error) {
@@ -531,7 +524,7 @@ export class WtsChatService {
       });
 
       const channels = response?.data || [];
-      channels.push({ name: 'Undefined', id: 'null'});
+      channels.push({ name: 'Undefined', id: notSend});
 
       return channels.map((channel: any) => ({
         name:  channel.identity ? (channel.identity.humanId + ' ' + channel.identity.platform) : 'Undefined',
@@ -558,7 +551,7 @@ export class WtsChatService {
       });
 
       const data = response?.data;
-      data.items?.push({name: 'Undefined', id: 'null'})
+      data.items?.push({name: 'Undefined', id: notSend})
 
       return data.items.map((bot: any) => ({
         name: bot.name,
@@ -599,7 +592,6 @@ export class WtsChatService {
         const data = response.data;
         result.push(...data.items);
      
-
         if (!data.hasMorePages) {
           hasMore = false;
         }
@@ -619,7 +611,7 @@ export class WtsChatService {
           params: template?.params
         })
       };
-    }).concat([{ name: 'Undefined', value: 'null' }]);
+    }).concat([{ name: 'Undefined', value: notSend }]);
   }
 
   static async getTemplateIds(channelId: string, token: string, nameTemplate: string): Promise<{ id: string }> {

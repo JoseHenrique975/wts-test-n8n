@@ -1,4 +1,5 @@
 import { INodeProperties } from "n8n-workflow";
+//import { notSend } from "../constants.types";
 
 export const messageOperations: INodeProperties[] = [
     {
@@ -53,12 +54,15 @@ export const messageFields: INodeProperties[] = [
         displayName: 'From Name or ID',
         name: 'channelId',
         type: 'options',
-        default: 'null',
+        default: 'NOT_SEND',
         placeholder: 'Choose Channel',
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>',
         typeOptions: {
             loadOptionsMethod: 'getChannelsIds',
         },
+        options: [
+            {name:'Undefined', value: 'NOT_SEND'}
+        ],
         displayOptions: {
             show: {
                 resource: ['message', 'chatbot'],
@@ -75,7 +79,10 @@ export const messageFields: INodeProperties[] = [
             loadOptionsDependsOn: ['channelId'],
             loadOptionsMethod: 'getTemplates'
         },
-        default: 'null',
+        options: [
+            {name:'Undefined', value: 'NOT_SEND'}
+        ],
+        default: 'NOT_SEND',
         placeholder: 'Choose your template',
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>',
         displayOptions: {
@@ -173,11 +180,13 @@ export const messageFields: INodeProperties[] = [
     },
 
     {
-        displayName: 'File',
+        displayName: 'Field File',
         name: 'fileToSend',
-        type: 'json',
-        default: {},
+        type: 'string',
+        default: '',
+        requiresDataPath: 'single',
         placeholder: 'Place the file',
+        description: "The name of the input field that contains the base64 string to convert to a file. Use dot-notation for deep fields (e.g. 'level1.level2.currentKey').",
         displayOptions: {
             show: {
                 resource: ['message', 'session'],

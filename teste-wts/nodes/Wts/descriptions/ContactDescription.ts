@@ -137,7 +137,7 @@ export const contactFields: INodeProperties[] = [
                         displayName: 'Key Name or ID',
                         name: 'key',
                         type: 'options',
-                        default: 'null',
+                        default: 'NOT_SEND',
                         typeOptions: {
                             loadOptionsMethod: 'getCustomFields',
                         },

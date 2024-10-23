@@ -1,4 +1,5 @@
 import { INodeProperties } from "n8n-workflow";
+//import { notSend } from "../constants.types";
 
 export const commonFields: INodeProperties[] = [
 
@@ -87,12 +88,15 @@ export const commonFields: INodeProperties[] = [
         displayName: 'Bots Name or ID',
         name: 'botId',
         type: 'options',
-        default: 'null',
+        default: 'NOT_SEND',
         placeholder: 'Choose bot',
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>',
         typeOptions: {
             loadOptionsMethod: 'getBots',
         },
+        options: [
+            {name: 'Undefined', value: 'NOT_SEND'}
+        ],
         displayOptions: {
             show: {
                 resource: ['message', 'chatbot'],
@@ -111,12 +115,15 @@ export const commonFields: INodeProperties[] = [
         displayName: 'User Name or ID',
         name: 'userId',
         type: 'options',
-        default: 'null',
+        default: 'NOT_SEND',
         placeholder: 'Choose user',
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>',
         typeOptions: {
             loadOptionsMethod: 'getUsersIds',
         },
+        options: [
+            {name:'Undefined', value: 'NOT_SEND'}
+        ],
         displayOptions: {
             show: {
                 resource: ['session', 'panel'],
@@ -129,13 +136,15 @@ export const commonFields: INodeProperties[] = [
         displayName: 'Departments Name or ID',
         name: 'departmentId',
         type: 'options',
-        default: 'null',
-        required: false,
+        default: 'NOT_SEND',
         placeholder: 'Choose department',
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>',
         typeOptions: {
             loadOptionsMethod: 'getDepartmentsIds',
         },
+        options: [
+            {name:'Undefined', value: 'NOT_SEND'}
+        ],
         displayOptions: {
             show: {
                 resource: ['message', 'session'],
@@ -148,20 +157,23 @@ export const commonFields: INodeProperties[] = [
         displayName: 'User Name or ID',
         name: 'userIdByDepartment',
         type: 'options',
-        default: 'null',
+        default: 'NOT_SEND',
         placeholder: 'Choose user',
         description: 'Update this list of users, every time you change departments, to show users from that department. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
         typeOptions: {
             loadOptionsMethod: 'getUsersByDepartments',
             loadOptionsDependsOn: ['departmentId'],
         },
+        options: [
+            {name:'Undefined', value: 'NOT_SEND'}
+        ],
         displayOptions: {
             show: {
                 resource: ['message', 'session'],
                 operation: ['sendText', 'sendFile', 'sendTemplate', 'updateTransfer']
             },
             hide: {
-                departmentId: ['null']
+                departmentId: ['NOT_SEND']
             }
         },
     },

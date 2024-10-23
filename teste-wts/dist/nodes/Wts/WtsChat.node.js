@@ -431,6 +431,10 @@ class WtsChat {
                 const enableBot = this.getNodeParameter('enableBot', 0);
                 const hiddenSession = this.getNodeParameter('hiddenSession', 0);
                 const forceStartSession = this.getNodeParameter('forceStartSession', 0);
+                if (file && !fileUrl) {
+                    console.log("File");
+                    console.log(file);
+                }
                 if (!file && !fileUrl) {
                     throw new n8n_workflow_1.NodeApiError(this.getNode(), {
                         message: 'Fill in any of the fields, whether Url or File!',
@@ -461,8 +465,9 @@ class WtsChat {
                 };
                 console.log("Body antes da requisição");
                 console.log(body);
+                const t = (0, n8n_workflow_1.jsonParse)(file);
                 if (file) {
-                    const responseSaveFile = await wts_chat_service_1.WtsChatService.saveFile(file, token);
+                    const responseSaveFile = await wts_chat_service_1.WtsChatService.saveFile(t, token);
                     body.body.fileId = responseSaveFile.data.id;
                     body.body.fileUrl = null;
                 }

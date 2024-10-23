@@ -1,6 +1,6 @@
 import { ILoadOptionsFunctions } from 'n8n-workflow';
 import axios from 'axios';
-import { Constants } from './constants.types';
+import { Constants, notSend } from './constants.types';
 import { sendRequestOrAutoPagination } from '../utils';
 
 export class WtsCrmService {
@@ -294,7 +294,7 @@ export class WtsCrmService {
             name: panel.title,
             value: panel.id
         }));
-        mappedResult.push({name: 'Undefined', value: 'null'});
+        mappedResult.push({name: 'Undefined', value: notSend});
         return mappedResult;
     }
 
@@ -351,8 +351,7 @@ export class WtsCrmService {
             name: step.title,
             value: step.id
         }));
-        result.push({name: 'Undefined', value: 'null'});
-        console.log(result);
+        result.push({name: 'Undefined', value: notSend});
         return result;
     }
 
@@ -416,16 +415,13 @@ export class WtsCrmService {
                 value: customField.key
             }));
         } catch (error) {
-            throw new ErrorEvent(`Failed to load steps: ${error.message}`);
+            throw new ErrorEvent(`Failed to load custom fields: ${error.message}`);
         }
     }
 
     static async getCustomFieldsByIdCard(idCard: string, otp: ILoadOptionsFunctions): Promise<Array<{ name: string, value: string }>> {
         const credentials = await otp.getCredentials('wtsApi');
         const token = credentials?.apiKey as string;
-
-        console.log("Get Custom Field By Id")
-        console.log(idCard);
 
         const card = await WtsCrmService.getCardById(idCard, [], token);
 

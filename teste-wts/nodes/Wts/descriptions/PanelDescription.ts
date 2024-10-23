@@ -1,4 +1,5 @@
 import { INodeProperties } from "n8n-workflow";
+//import { notSend } from "../constants.types";
 
 export const panelOperations: INodeProperties[] = [
     {
@@ -113,9 +114,12 @@ export const panelFields: INodeProperties[] = [
         displayName: 'Panel Name or ID',
         name: 'panels',
         type: 'options',
-        default: 'null',
+        default: 'NOT_SEND',
         placeholder: 'Choose Panel',
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>',
+        options: [
+            {name:'Undefined', value: 'NOT_SEND'}
+        ],
         typeOptions: {
             loadOptionsMethod: 'getPanels',
         },
@@ -130,13 +134,16 @@ export const panelFields: INodeProperties[] = [
         displayName: 'Step Name or ID',
         name: 'stepPanels',
         type: 'options',
-        default: 'null',
+        default: 'NOT_SEND',
         placeholder: 'Choose Step',
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>',
         typeOptions: {
             loadOptionsDependsOn: ['panels'],
             loadOptionsMethod: 'getStepsPanelId'
         },
+        options: [
+            {name:'Undefined', value: 'NOT_SEND'}
+        ],
         displayOptions: {
             show: {
                 resource: ['panel'],
@@ -264,7 +271,6 @@ export const panelFields: INodeProperties[] = [
                 typeOptions: {
                     multipleValues: true
                 },
-
                 placeholder: 'Add url file'
             },
         ],
@@ -558,12 +564,12 @@ export const updateCardFields: INodeProperties[] = [
                 value: 'ResponsibleUserId',
             },
             {
-                name: 'StepId',
-                value: 'StepId',
-            },
-            {
                 name: 'SessionId',
                 value: 'SessionId',
+            },
+            {
+                name: 'StepId',
+                value: 'StepId',
             },
             {
                 name: 'TagIds',
@@ -752,12 +758,15 @@ export const updateCardFields: INodeProperties[] = [
         displayName: 'User Name or ID',
         name: 'userIdUpdateCard',
         type: 'options',
-        default: 'null',
+        default: 'NOT_SEND',
         placeholder: 'Choose user',
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>',
         typeOptions: {
             loadOptionsMethod: 'getUsersIds',
         },
+        options: [
+            {name:'Undefined', value: 'NOT_SEND'}
+        ],
         displayOptions: {
             show: {
                 resource: ['panel'],

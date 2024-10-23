@@ -1,4 +1,5 @@
 import { INodeProperties } from "n8n-workflow";
+//import { notSend } from "../constants.types";
 
 export const sessionOperations: INodeProperties[] = [
     {
@@ -301,7 +302,10 @@ export const sessionFields: INodeProperties[] = [
             loadOptionsDependsOn: ['sessionId'],
             loadOptionsMethod: 'getTemplatesSession'
         },
-        default: 'null',
+        options: [
+            {name: 'Undefined', value: 'NOT_SEND'}
+        ],
+        default: 'NOT_SEND',
         placeholder: 'Choose your template',
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>',
         displayOptions: {
@@ -353,7 +357,7 @@ export const sessionFields: INodeProperties[] = [
                 operation: ['sendMessageTemplateSession']
             },
             hide: {
-                templatesBySession: ['null']
+                templatesBySession: ['NOT_SEND']
             }
         }
     },
@@ -388,13 +392,15 @@ export const updateSessionFields: INodeProperties[] = [
         displayName: 'Departments Name or ID',
         name: 'departmentIdUpdatedSession',
         type: 'options',
-        default: 'null',
-        required: false,
+        default: 'NOT_SEND',
         placeholder: 'Choose department',
         description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>',
         typeOptions: {
             loadOptionsMethod: 'getDepartmentsIds',
         },
+        options: [
+            {name:'Undefined', value: 'NOT_SEND'}
+        ],
         displayOptions: {
             show: {
                 resource: ['session'],
@@ -408,13 +414,16 @@ export const updateSessionFields: INodeProperties[] = [
         displayName: 'User Name or ID',
         name: 'userIdByDepartmentUpdateSession',
         type: 'options',
-        default: [],
+        default: 'NOT_SEND',
         placeholder: 'Choose user',
         description: 'Update this list of users, every time you change departments, to show users from that department. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
         typeOptions: {
             loadOptionsMethod: 'getUsersByDepartments',
             loadOptionsDependsOn: ['departmentIdUpdatedSession'],
-        },
+        },  
+        options: [
+            {name:'Undefined', value: 'NOT_SEND'}
+        ],
         displayOptions: {
             show: {
                 resource: ['session'],
